@@ -2,4 +2,4 @@
 # https://github.com/microsoft/pyright/blob/master/docs/typed-libraries.md#library-interface
 from __future__ import annotations
 
-from .classifier import ImageClassifier as ImageClassifier
+from .segmentor import Segmentor

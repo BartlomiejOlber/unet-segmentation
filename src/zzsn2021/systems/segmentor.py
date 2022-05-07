@@ -11,17 +11,21 @@ import torch.nn.functional as F
 from hydra.utils import instantiate
 from pytorch_lightning.loggers.base import LoggerCollection
 from pytorch_lightning.loggers.wandb import WandbLogger
-from pytorch_lightning.metrics import Accuracy
+from torchmetrics.functional import dice_score
 from rich import print
-from torch.optim.lr_scheduler import _LRScheduler
 from torch.optim.optimizer import Optimizer
 from wandb.sdk.wandb_run import Run
 
 from ..configs import Config
-from ..models import ConvNet
+from ..models import UNet
 
 
-class ImageClassifier(pl.LightningModule):
+def _dice_score(pred, targs):
+    pred = (pred > 0).float()
+    return 2. * (pred * targs).sum() / (pred + targs).sum()
+
+
+class Segmentor(pl.LightningModule):
     """
     Basic image classifier.
     """
@@ -34,12 +38,14 @@ class ImageClassifier(pl.LightningModule):
 
         self.cfg = cfg
 
-        self.model = ConvNet(self.cfg)
-        self.criterion = nn.CrossEntropyLoss()
+        self.model = UNet(self.cfg)
+        # self.criterion = nn.CrossEntropyLoss()
+        self.criterion = nn.BCELoss()
 
         # Metrics
-        self.train_acc = Accuracy()
-        self.val_acc = Accuracy()
+
+        # self.train_f1 = F1Score(mdmc_average="global")
+        # self.val_f1 = F1Score(mdmc_average="global")
 
     # -----------------------------------------------------------------------------------------------
     # Default PyTorch Lightning hooks
@@ -129,7 +135,10 @@ class ImageClassifier(pl.LightningModule):
         torch.Tensor
             Output tensor.
         """
-        return self.model(x)
+        x = self.model(x)
+
+        # return torch.argmax(x, dim=1)
+        return x
 
     # ----------------------------------------------------------------------------------------------
     # Loss
@@ -152,7 +161,11 @@ class ImageClassifier(pl.LightningModule):
         torch.Tensor
             Loss value.
         """
+        if self.cfg.experiment.deep_supervision:
+            return self.criterion(outputs[0], targets) + self.cfg.experiment.aux_loss_weight * self.criterion(outputs[1], targets)
         return self.criterion(outputs, targets)
+
+
 
     # ----------------------------------------------------------------------------------------------
     # Training
@@ -176,13 +189,22 @@ class ImageClassifier(pl.LightningModule):
         inputs, targets = batch
         outputs = self(inputs)  # basically equivalent to self.forward(data)
         loss = self.calculate_loss(outputs, targets)
-
-        self.train_acc(F.softmax(outputs, dim=1), targets)
-
-        return {
+        targets, outputs = targets.round().int(), outputs[0].round().int() if isinstance(outputs, tuple) else outputs.round().int()
+        # dice = dice_score(outputs, targets)
+        dice = _dice_score(outputs, targets)
+        # print(dice)
+        # print(dice2)
+        # exit(0)
+        # self.train_f1(outputs, targets)
+        metrics = {
             'loss': loss,
+            'dice_score': dice,
             # no need to return 'train_acc' here since it is always available as `self.train_acc`
         }
+
+        if batch_idx % self.cfg.experiment.log_interval == 0:
+            self.logger.log_metrics(metrics, step=float(batch_idx))
+        return metrics
 
     def training_epoch_end(self, outputs: list[Any]) -> None:
         """
@@ -197,7 +219,7 @@ class ImageClassifier(pl.LightningModule):
 
         metrics = {
             'epoch': float(step),
-            'train_acc': float(self.train_acc.compute().item()),
+            # 'train_f1': float(self.train_f1.compute().item()),
         }
 
         # Average additional metrics over all batches
@@ -231,10 +253,11 @@ class ImageClassifier(pl.LightningModule):
 
         inputs, targets = batch
         outputs = self(inputs)  # basically equivalent to self.forward(data)
-
-        self.val_acc(F.softmax(outputs, dim=1), targets)
+        targets, outputs = targets.round().int(), outputs[0].round().int() if isinstance(outputs, tuple) else outputs.round().int()
+        dice = dice_score(outputs, targets)
 
         return {
+            'dice_score': dice,
             # 'additional_metric': ...
             # no need to return 'val_acc' here since it is always available as `self.val_acc`
         }
@@ -252,7 +275,6 @@ class ImageClassifier(pl.LightningModule):
 
         metrics = {
             'epoch': float(step),
-            'val_acc': float(self.val_acc.compute().item()),
         }
 
         # Average additional metrics over all batches

@@ -13,7 +13,7 @@ class HumansMattingDataModule(LightningDataModule):
 
     name: str = "humans_matting"
     #: Dataset class to use
-    dataset_cls: HumansMattingDataset
+    dataset_cls = HumansMattingDataset
 
     def __init__(
         self,
@@ -54,31 +54,35 @@ class HumansMattingDataModule(LightningDataModule):
         self.shuffle = shuffle
         self.pin_memory = pin_memory
         self.drop_last = drop_last
+        print(self.num_workers)
+        print(self.batch_size)
 
     def prepare_data(self, *args: Any, **kwargs: Any) -> None:
         """
         Saves files to data_dir
         """
-        self.dataset_cls(self.data_dir)
-        self.dataset_cls(self.data_dir)
+        # default_transforms = self.default_transforms()
+        # self.dataset_cls(self.data_dir, transform=default_transforms[0], target_transform=default_transforms[1])
+
 
     def setup(self, stage: Optional[str] = None) -> None:
         """
         Creates train, val, and test dataset
         """
+        print("SETUP")
         if stage == "fit" or stage is None:
-            train_transforms = self.default_transforms() if self.train_transforms is None else self.train_transforms
-            val_transforms = self.default_test_transforms() if self.val_transforms is None else self.val_transforms
+            train_transforms = self.resize_transforms() if self.train_transforms is None else self.train_transforms
+            # val_transforms = self.default_test_transforms() if self.val_transforms is None else self.val_transforms
 
-            dataset_train = self.dataset_cls(self.data_dir, transform=train_transforms[0], target_transform=train_transforms[1])
-            dataset_val = self.dataset_cls(self.data_dir, transform=val_transforms[0], target_transform=val_transforms[1])
+            dataset_train = self.dataset_cls(self.data_dir, transform=train_transforms, target_transform=train_transforms)
+            # dataset_val = self.dataset_cls(self.data_dir, transform=train_transforms, target_transform=train_transforms) #todo eager loading
 
             # Split
             self.dataset_train = self._split_dataset(dataset_train)
-            self.dataset_val = self._split_dataset(dataset_val, train=False)
+            self.dataset_val = self._split_dataset(dataset_train, train=False)
 
         if stage == "test" or stage is None:
-            test_transforms = self.default_test_transforms() if self.test_transforms is None else self.test_transforms
+            test_transforms = self.resize_transforms() if self.test_transforms is None else self.test_transforms
             self.dataset_test = self.dataset_cls(
                 self.data_dir, transform=test_transforms[0], target_transform=test_transforms[1]
             )
@@ -112,26 +116,18 @@ class HumansMattingDataModule(LightningDataModule):
         return splits
 
     def default_transforms(self) -> Callable: #todo experiments, imgs augmentation, resize
-        if self.normalize:
-            img_transforms = transforms.Compose([
-                transforms.ToTensor(), transforms.Normalize(mean=(0.5,), std=(0.5,))
-            ])
-        else:
-            img_transforms = transforms.Compose([transforms.ToTensor()])
-
-        target_transforms = transforms.Compose([transforms.ToTensor(), ExtractAlpha()])
+        img_transforms = transforms.Compose([
+            transforms.ToTensor(), transforms.Resize(64)
+        ])
+        target_transforms = transforms.Compose([transforms.ToTensor(), ExtractAlpha(), transforms.Resize(64)])
         return img_transforms, target_transforms
 
-    def default_test_transforms(self) -> Callable: #todo experiments, imgs augmentation, resize
-        if self.normalize:
-            img_transforms = transforms.Compose([
-                transforms.ToTensor(), transforms.Normalize(mean=(0.5,), std=(0.5,))
-            ])
-        else:
-            img_transforms = transforms.Compose([transforms.ToTensor()])
-
-        target_transforms = transforms.Compose([transforms.ToTensor(), ExtractAlpha()])
-        return img_transforms, target_transforms
+    def resize_transforms(self) -> Callable: #todo experiments, imgs augmentation, resize
+        img_transforms = transforms.Compose([
+            # transforms.Resize(64)
+            torch.nn.Identity()
+        ])
+        return img_transforms
 
     def train_dataloader(self, *args: Any, **kwargs: Any) -> DataLoader:
         """ The train dataloader """
@@ -158,7 +154,7 @@ class HumansMattingDataModule(LightningDataModule):
 
 class ExtractAlpha(object):
     def __call__(self, pic):
-        return pic[:, :, 3]
+        return pic[3, :, :].unsqueeze(0)
 
     def __repr__(self):
         return self.__class__.__name__ + '()'

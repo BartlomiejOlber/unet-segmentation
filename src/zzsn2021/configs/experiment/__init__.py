@@ -5,7 +5,6 @@ from typing import Any, List, Optional, Tuple
 
 from omegaconf.omegaconf import MISSING
 
-
 # Experiment settings validation schema & default values
 @dataclass
 class ExperimentSettings:
@@ -53,3 +52,15 @@ class ExperimentSettings:
 
     # Number of output classes
     n_classes: int = 10
+
+    # Upsample type
+    bilinear: bool = False
+
+    # Train with auxiliary head
+    deep_supervision: bool = False
+
+    # aux_head loss
+    aux_loss_weight: float = .4
+
+    # wandb train steps per metrics log
+    log_interval: int = 10

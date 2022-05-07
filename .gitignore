@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+data
+results
+.idea
+.hydra
+checkpoints

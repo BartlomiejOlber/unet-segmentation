@@ -9,6 +9,15 @@ resume_checkpoint: ~
 # resume_checkpoint: ${oc.env:RESULTS_DIR}/${oc.env:WANDB_PROJECT}/20210422-1430-phenomenal-elephant/checkpoints/epoch_5.ckpt
 
 datamodule:
-  _target_: zzsn.datamodules.humans_matting.HumansMattingDataModule
+  _target_: src.zzsn2021.datamodules.humans_matting.datamodule.HumansMattingDataModule
 
   data_dir: ${oc.env:DATA_DIR}
+
+num_workers: 1
+batch_size: 4
+n_classes: 1
+
+bilinear: False
+deep_supervision: True
+aux_loss_weight: 0.4
+log_interval: 10

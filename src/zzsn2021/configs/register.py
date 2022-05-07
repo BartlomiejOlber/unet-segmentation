@@ -15,10 +15,10 @@ from .experiment import ExperimentSettings
 from .lightning import LightningSettings
 from .optim import OPTIMIZERS, SCHEDULERS, OptimSettings
 
-
 @dataclass
 class Hydra(HydraConf):
-    run: RunDir = RunDir("${output_dir}")
+    # run: RunDir = RunDir("${output_dir}")
+    run: RunDir = RunDir(".")
     sweep: SweepDir = SweepDir(".", "${output_dir}")
 
 
@@ -28,7 +28,7 @@ class Config():
     Top-level Hydra config class.
     """
     defaults: List[Any] = field(default_factory=lambda: [
-        {'experiment': 'fashion'},
+        {'experiment': 'unet'},
         {'optim': 'adam'},
         {'override hydra/job_logging': 'rich'},
         {'override hydra/hydra_logging': 'rich'},

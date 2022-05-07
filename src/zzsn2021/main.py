@@ -34,10 +34,11 @@ from pytorch_lightning.loggers import WandbLogger
 from wandb.sdk.wandb_run import Run
 
 from .configs import Config, get_tags, register_configs
-from .systems.classifier import ImageClassifier
+from .systems.segmentor import Segmentor
 from .utils.callbacks import CustomCheckpointer, get_resume_checkpoint
 from .utils.logging import log
 from .utils.rundir import setup_rundir
+
 
 wandb_logger: WandbLogger
 
@@ -52,6 +53,7 @@ def main(cfg: Config) -> None:
     validation and provide auto-complete support in IDEs.
 
     """
+    print(os.getcwd())
     RUN_NAME = os.getenv('RUN_NAME')
 
     log.info(f'[bold yellow]\\[init] Run name --> {RUN_NAME}')
@@ -72,7 +74,7 @@ def main(cfg: Config) -> None:
     )
 
     # Create main system (system = models + training regime)
-    system = ImageClassifier(cfg)
+    system = Segmentor(cfg)
     log.info(f'[bold yellow]\\[init] System architecture:')
     log.info(system)
 
@@ -112,6 +114,15 @@ def main(cfg: Config) -> None:
         resume_from_checkpoint=resume_path,
         num_sanity_val_steps=-1 if cfg.experiment.validate_before_training else 0,
     )
+    # datamodule.setup("fit")
+    # dl = datamodule.train_dataloader()
+    # import torchvision.transforms.functional as F
+    # for data in dl:
+        # img = F.to_pil_image(data[0][0])
+        # mask = F.to_pil_image(data[1][0])
+        # mask.show()
+        # img.show()
+        # exit(0)
 
     trainer.fit(system, datamodule=datamodule)  # type: ignore
     # Alternative way to call:
