@@ -81,7 +81,7 @@ class UNet(nn.Module):
 
         if self.with_auxiliary:
             self.auxiliary_head = nn.Sequential(
-                nn.Upsample(size=(85, 64), mode='bilinear', align_corners=True),
+                nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True), # todo size
                 nn.Conv2d(128, 64, kernel_size=3, padding=1),
                 nn.BatchNorm2d(64),
                 nn.ReLU(inplace=True),

@@ -71,10 +71,10 @@ class HumansMattingDataModule(LightningDataModule):
         """
         print("SETUP")
         if stage == "fit" or stage is None:
-            train_transforms = self.resize_transforms() if self.train_transforms is None else self.train_transforms
+            train_transforms = self.default_transforms() if self.train_transforms is None else self.train_transforms
             # val_transforms = self.default_test_transforms() if self.val_transforms is None else self.val_transforms
 
-            dataset_train = self.dataset_cls(self.data_dir, transform=train_transforms, target_transform=train_transforms)
+            dataset_train = self.dataset_cls(self.data_dir, transform=train_transforms[0], target_transform=train_transforms[1], lazy=True)
             # dataset_val = self.dataset_cls(self.data_dir, transform=train_transforms, target_transform=train_transforms) #todo eager loading
 
             # Split
@@ -117,9 +117,9 @@ class HumansMattingDataModule(LightningDataModule):
 
     def default_transforms(self) -> Callable: #todo experiments, imgs augmentation, resize
         img_transforms = transforms.Compose([
-            transforms.ToTensor(), transforms.Resize(64)
+            transforms.ToTensor(), transforms.Resize(120)
         ])
-        target_transforms = transforms.Compose([transforms.ToTensor(), ExtractAlpha(), transforms.Resize(64)])
+        target_transforms = transforms.Compose([transforms.ToTensor(), ExtractAlpha(), transforms.Resize(120)])
         return img_transforms, target_transforms
 
     def resize_transforms(self) -> Callable: #todo experiments, imgs augmentation, resize

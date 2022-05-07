@@ -13,11 +13,11 @@ datamodule:
 
   data_dir: ${oc.env:DATA_DIR}
 
-num_workers: 1
-batch_size: 4
+num_workers: 8
+batch_size: 32
 n_classes: 1
 
 bilinear: False
-deep_supervision: True
+deep_supervision: False
 aux_loss_weight: 0.4
 log_interval: 10

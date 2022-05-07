@@ -16,7 +16,7 @@ class LightningSettings(TrainerConf):
     gpus: int = 1
 
     # Number of training epochs
-    max_epochs: int = 100
+    max_epochs: int = 2
 
     # Progress refresh rate in steps
     progress_bar_refresh_rate: int = 1

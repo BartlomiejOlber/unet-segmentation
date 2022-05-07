@@ -7,6 +7,7 @@ import glob
 import os
 from typing import Optional, Callable
 from tqdm import tqdm
+import copy
 
 class HumansMattingDataset(Dataset):
     def __init__(self, root: str, transform: Optional[Callable] = None,
@@ -21,7 +22,6 @@ class HumansMattingDataset(Dataset):
         self.mask_path_list = self.get_filenames(self.mask_path, ".png")
         self._filter_mismatched()
         self.lazy = lazy
-        import matplotlib.pyplot as plt
         if not self.lazy:
             self._load_data()
 
@@ -36,10 +36,16 @@ class HumansMattingDataset(Dataset):
             self.mask_list = []
             for img_path in tqdm(self.img_path_list):
                 img = Image.open(img_path)
-                self.img_list.append(self.transform(img))
+                keep = img.copy()
+                self.img_list.append(self.transform(keep))
+                img.close()
+
             for mask_path in tqdm(self.mask_path_list):
                 mask = Image.open(mask_path)
-                self.mask_list.append(self.target_transform(mask))
+                keep = mask.copy()
+                self.mask_list.append(self.target_transform(keep))
+                mask.close()
+
             with open(pickle_path, 'wb') as f:
                 pickle.dump([self.img_list, self.mask_list], f)
 

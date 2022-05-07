@@ -41,6 +41,7 @@ class Segmentor(pl.LightningModule):
         self.model = UNet(self.cfg)
         # self.criterion = nn.CrossEntropyLoss()
         self.criterion = nn.BCELoss()
+        self.step = 0
 
         # Metrics
 
@@ -201,9 +202,9 @@ class Segmentor(pl.LightningModule):
             'dice_score': dice,
             # no need to return 'train_acc' here since it is always available as `self.train_acc`
         }
-
+        self.step += 1
         if batch_idx % self.cfg.experiment.log_interval == 0:
-            self.logger.log_metrics(metrics, step=float(batch_idx))
+            self.logger.log_metrics(metrics, step=float(self.step))
         return metrics
 
     def training_epoch_end(self, outputs: list[Any]) -> None:
@@ -257,7 +258,7 @@ class Segmentor(pl.LightningModule):
         dice = dice_score(outputs, targets)
 
         return {
-            'dice_score': dice,
+            'val_dice_score': dice,
             # 'additional_metric': ...
             # no need to return 'val_acc' here since it is always available as `self.val_acc`
         }
@@ -280,5 +281,4 @@ class Segmentor(pl.LightningModule):
         # Average additional metrics over all batches
         for key in outputs[0]:
             metrics[key] = float(self._reduce(outputs, key).item())
-
         self.logger.log_metrics(metrics, step=step)

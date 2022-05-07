@@ -3,6 +3,24 @@ hydra-core==1.1.0.dev5
 git+https://github.com/pytorch/hydra-torch
 pytorch-lightning-bolts==0.3.2
 pytorch-lightning==1.2.8
+coolname
+gym
+hydra-configs-pytorch-lightning
+hydra-configs-torch
+hydra-configs-torchvision
+hydra-core
+matplotlib
+pytest
+python-dotenv
+pytorch-lightning
+pytorch-lightning-bolts
+rich
+setproctitle
+torchstat
+torchsummary
+tqdm
+wandb
+kaggle
 
 --index-url https://pypi.python.org/simple/
 -e .
