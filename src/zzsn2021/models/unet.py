@@ -122,3 +122,4 @@ class UNet(nn.Module):
         aux = self.auxiliary_head(x6)
         x6 = self.dec4(x6, x1)
         return self.head(x6), aux
+

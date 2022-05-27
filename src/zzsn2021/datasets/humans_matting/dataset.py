@@ -7,7 +7,7 @@ import glob
 import os
 from typing import Optional, Callable
 from tqdm import tqdm
-import copy
+
 
 class HumansMattingDataset(Dataset):
     def __init__(self, root: str, transform: Optional[Callable] = None,
@@ -31,7 +31,6 @@ class HumansMattingDataset(Dataset):
             with open(pickle_path, 'rb') as f:
                 self.img_list, self.mask_list = pickle.load(f)
         except IOError:
-            print("LOADING IMAGES")
             self.img_list = []
             self.mask_list = []
             for img_path in tqdm(self.img_path_list):
@@ -65,7 +64,7 @@ class HumansMattingDataset(Dataset):
             files_list.append(filename)
         return sorted(files_list)
 
-    def _filter_mismatched(self): # there are some extra masks
+    def _filter_mismatched(self):  # there are some extra masks
         for img_path, mask_path in zip(self.img_path_list, self.mask_path_list):
             if img_path.split("/")[-1].split(".")[0] != mask_path.split("/")[-1].split(".")[0]:
                 self.mask_path_list.remove(mask_path)

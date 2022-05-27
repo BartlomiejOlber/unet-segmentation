@@ -89,3 +89,8 @@ Tak przesłane pliki można później wykorzystać do wznowienia uczenia na inny
 odpowiedniego ustawienia w konfiguracji eksperymentu, przykładowo::
 
     resume_checkpoint: wandb://WANDB_USER/WANDB_PROJECT/test_model:v0@epoch_5.ckpt
+
+UNET
+----
+Należy pobrać zbiór danych *https://www.kaggle.com/datasets/laurentmih/aisegmentcom-matting-human-datasets* i rozpakować
+go w katalogu *data*.

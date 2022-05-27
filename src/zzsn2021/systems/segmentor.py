@@ -7,7 +7,6 @@ import numpy as np
 import pytorch_lightning as pl
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from hydra.utils import instantiate
 from pytorch_lightning.loggers.base import LoggerCollection
 from pytorch_lightning.loggers.wandb import WandbLogger
@@ -39,14 +38,8 @@ class Segmentor(pl.LightningModule):
         self.cfg = cfg
 
         self.model = UNet(self.cfg)
-        # self.criterion = nn.CrossEntropyLoss()
         self.criterion = nn.BCELoss()
         self.step = 0
-
-        # Metrics
-
-        # self.train_f1 = F1Score(mdmc_average="global")
-        # self.val_f1 = F1Score(mdmc_average="global")
 
     # -----------------------------------------------------------------------------------------------
     # Default PyTorch Lightning hooks
@@ -191,12 +184,7 @@ class Segmentor(pl.LightningModule):
         outputs = self(inputs)  # basically equivalent to self.forward(data)
         loss = self.calculate_loss(outputs, targets)
         targets, outputs = targets.round().int(), outputs[0].round().int() if isinstance(outputs, tuple) else outputs.round().int()
-        # dice = dice_score(outputs, targets)
         dice = _dice_score(outputs, targets)
-        # print(dice)
-        # print(dice2)
-        # exit(0)
-        # self.train_f1(outputs, targets)
         metrics = {
             'loss': loss,
             'dice_score': dice,

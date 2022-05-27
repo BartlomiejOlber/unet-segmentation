@@ -54,35 +54,25 @@ class HumansMattingDataModule(LightningDataModule):
         self.shuffle = shuffle
         self.pin_memory = pin_memory
         self.drop_last = drop_last
-        print(self.num_workers)
-        print(self.batch_size)
 
     def prepare_data(self, *args: Any, **kwargs: Any) -> None:
-        """
-        Saves files to data_dir
-        """
-        # default_transforms = self.default_transforms()
-        # self.dataset_cls(self.data_dir, transform=default_transforms[0], target_transform=default_transforms[1])
-
+        pass
 
     def setup(self, stage: Optional[str] = None) -> None:
         """
         Creates train, val, and test dataset
         """
-        print("SETUP")
         if stage == "fit" or stage is None:
             train_transforms = self.default_transforms() if self.train_transforms is None else self.train_transforms
-            # val_transforms = self.default_test_transforms() if self.val_transforms is None else self.val_transforms
 
             dataset_train = self.dataset_cls(self.data_dir, transform=train_transforms[0], target_transform=train_transforms[1], lazy=True)
-            # dataset_val = self.dataset_cls(self.data_dir, transform=train_transforms, target_transform=train_transforms) #todo eager loading
 
             # Split
             self.dataset_train = self._split_dataset(dataset_train)
             self.dataset_val = self._split_dataset(dataset_train, train=False)
 
         if stage == "test" or stage is None:
-            test_transforms = self.resize_transforms() if self.test_transforms is None else self.test_transforms
+            test_transforms = self.default_transforms() if self.test_transforms is None else self.test_transforms
             self.dataset_test = self.dataset_cls(
                 self.data_dir, transform=test_transforms[0], target_transform=test_transforms[1]
             )
@@ -115,19 +105,12 @@ class HumansMattingDataModule(LightningDataModule):
 
         return splits
 
-    def default_transforms(self) -> Callable: #todo experiments, imgs augmentation, resize
+    def default_transforms(self) -> tuple[Callable, Callable]: #todo experiments, imgs augmentation, resize
         img_transforms = transforms.Compose([
             transforms.ToTensor(), transforms.Resize(120)
         ])
         target_transforms = transforms.Compose([transforms.ToTensor(), ExtractAlpha(), transforms.Resize(120)])
         return img_transforms, target_transforms
-
-    def resize_transforms(self) -> Callable: #todo experiments, imgs augmentation, resize
-        img_transforms = transforms.Compose([
-            # transforms.Resize(64)
-            torch.nn.Identity()
-        ])
-        return img_transforms
 
     def train_dataloader(self, *args: Any, **kwargs: Any) -> DataLoader:
         """ The train dataloader """
