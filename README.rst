@@ -1,12 +1,20 @@
 ************************************************************
-Szablon kodu do uczenia sieci neuronowej w PyTorch Lightning
+Segmentacja sylwetek ludzkich w PyTorch Lightning
 ************************************************************
 
-Przykład uczenia prostej sieci splotowej do klasyfikacji obrazów ze zbioru `Fashion-MNIST <https://github.com/zalandoresearch/fashion-mnist>`_.
+Przykład uczenia sieci segmentującej U-NET na zbiorze `Matting Human Datasets <https://www.kaggle.com/datasets/laurentmih/aisegmentcom-matting-human-datasets>`_.
 
-.. image:: figures/run-fashion-mnist.png
+
+.. image:: figures/loss.jpg
   :width: 1000
-  :alt: Model training on Fashion-MNIST
+  :alt: Training loss
+
+.. image:: figures/train.jpg
+  :width: 1000
+  :alt: Training dice score
+.. image:: figures/val.jpg
+  :width: 1000
+  :alt: Validation dice score
 
 Cechy
 -----
@@ -38,6 +46,8 @@ Konfiguracja środowiska w pliku ``.env`` po utworzeniu konta na wandb.ai::
 ``DATA_DIR`` jest katalogiem nadrzędnym do przechowywania zbiorów danych.
 ``RESULTS_DIR`` jest katalogiem nadrzędnym dla katalogów roboczych.
 
+Należy pobrać zbiór danych *https://www.kaggle.com/datasets/laurentmih/aisegmentcom-matting-human-datasets* i rozpakować
+go w katalogu *data*.
 
 Uruchamianie eksperymentów
 --------------------------
@@ -90,7 +100,10 @@ odpowiedniego ustawienia w konfiguracji eksperymentu, przykładowo::
 
     resume_checkpoint: wandb://WANDB_USER/WANDB_PROJECT/test_model:v0@epoch_5.ckpt
 
-UNET
-----
-Należy pobrać zbiór danych *https://www.kaggle.com/datasets/laurentmih/aisegmentcom-matting-human-datasets* i rozpakować
-go w katalogu *data*.
+Podmiana tła na zdjęciach
+------------------------------
+Podmiana tła została zaimplementowana w pliku `scripts/background.py`::
+
+    $ cd scripts
+    $ python background.py
+

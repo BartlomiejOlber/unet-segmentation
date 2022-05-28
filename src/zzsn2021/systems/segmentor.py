@@ -10,7 +10,6 @@ import torch.nn as nn
 from hydra.utils import instantiate
 from pytorch_lightning.loggers.base import LoggerCollection
 from pytorch_lightning.loggers.wandb import WandbLogger
-from torchmetrics.functional import dice_score
 from rich import print
 from torch.optim.optimizer import Optimizer
 from wandb.sdk.wandb_run import Run
@@ -243,7 +242,7 @@ class Segmentor(pl.LightningModule):
         inputs, targets = batch
         outputs = self(inputs)  # basically equivalent to self.forward(data)
         targets, outputs = targets.round().int(), outputs[0].round().int() if isinstance(outputs, tuple) else outputs.round().int()
-        dice = dice_score(outputs, targets)
+        dice = _dice_score(outputs, targets)
 
         return {
             'val_dice_score': dice,
